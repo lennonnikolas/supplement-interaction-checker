@@ -12,11 +12,11 @@ app.use('/api', checkRoute)
 
 // Serve frontend static files in production
 if (process.env.NODE_ENV === 'production') {
-  const distPath = path.join(__dirname, '../frontend/dist')
-  app.use(express.static(distPath))
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'))
-  })
+    const distPath = path.join(__dirname, 'frontend_dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
 }
 
 const PORT = process.env.PORT || 3000
