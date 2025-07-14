@@ -75,6 +75,8 @@
 import { ref, computed } from 'vue'
 import axios from 'axios'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+
 let idCounter = 0
 const supplementInputs = ref([
   { id: idCounter++, value: '', suggestions: [], search: '', loading: false },
@@ -103,7 +105,7 @@ async function onSearch(idx, val) {
   }
   input.loading = true
   try {
-    const resp = await axios.get(`http://localhost:3000/api/autosuggest?q=${encodeURIComponent(val)}`);
+    const resp = await axios.get(`${API_BASE_URL}/autosuggest?q=${encodeURIComponent(val)}`);
     input.suggestions = (resp.data.results || []).map(r => r.preferred_name)
     console.log('Suggestions for', val, ':', input.suggestions)
   } catch {
@@ -114,7 +116,7 @@ async function onSearch(idx, val) {
 
 async function checkInteractions() {
   const stack = supplementInputs.value.map(i => i.value.trim()).filter(Boolean)
-  const res = await axios.post('http://localhost:3000/api/check', { stack })
+  const res = await axios.post(`${API_BASE_URL}/check`, { stack })
   results.value = res.data.interactions
 }
 </script>
