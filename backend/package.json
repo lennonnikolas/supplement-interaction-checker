@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "heroku-postbuild": "cp -r ../frontend/dist ./frontend_dist"
+    "start": "node server.js"
   },
   "engines": {
     "node": ">=18.0.0"
