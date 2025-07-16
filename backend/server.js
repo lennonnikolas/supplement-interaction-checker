@@ -5,7 +5,7 @@ require('dotenv').config()
 const app = express()
 const allowedOrigins = [
   'https://supplement-checker-ui-app-e82892764eec.herokuapp.com',
-  'http://localhost:3000',
+  'http://localhost:5173',
 ];
 
 app.use(cors({

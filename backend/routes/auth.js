@@ -91,14 +91,4 @@ router.get('/google/callback', passport.authenticate('google', { session: false,
   res.redirect(`${redirectUrl}/oauth-success?token=${token}`);
 });
 
-// Apple OAuth: /auth/apple
-router.get('/apple', passport.authenticate('apple'));
-
-// Apple OAuth callback: /auth/apple/callback
-router.post('/apple/callback', passport.authenticate('apple', { session: false, failureRedirect: '/login' }), (req, res) => {
-  const token = createToken(req.user);
-  const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-  res.redirect(`${redirectUrl}/oauth-success?token=${token}`);
-});
-
 module.exports = router; 
