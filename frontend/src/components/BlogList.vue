@@ -1,6 +1,6 @@
 <template>
   <v-card class="mb-3" outlined>
-    <v-card-title>Learn: Articles & FAQ</v-card-title>
+    <v-card-title>Articles & FAQ</v-card-title>
     <v-card-text>
       <div v-if="loading">Loading...</div>
       <div v-else>
