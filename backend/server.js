@@ -6,6 +6,11 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+const passport = require('passport')
+const initPassport = require('./auth/passport')
+initPassport()
+app.use(passport.initialize())
+
 const checkRoute = require('./routes/check')
 app.use('/api', checkRoute)
 
@@ -23,6 +28,9 @@ app.use('/api/blog', blogRoute)
 
 const subscribeRoute = require('./routes/subscribe')
 app.use('/api/subscribe', subscribeRoute)
+
+const authRoutes = require('./routes/auth')
+app.use('/api/auth', authRoutes)
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))
