@@ -3,7 +3,23 @@ const cors = require('cors')
 require('dotenv').config()
 
 const app = express()
-app.use(cors())
+const allowedOrigins = [
+  'https://supplement-checker-ui-app-e82892764eec.herokuapp.com',
+  'http://localhost:3000',
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json())
 
 const passport = require('passport')
