@@ -6,9 +6,6 @@
         <v-btn block color="primary" class="mb-2" @click="oauth('google')">
           <v-icon left>mdi-google</v-icon> Sign in with Google
         </v-btn>
-        <v-btn block color="black" class="mb-4" @click="oauth('apple')">
-          <v-icon left>mdi-apple</v-icon> Sign in with Apple
-        </v-btn>
         <v-tabs v-model="tab" grow class="mb-2">
           <v-tab value="login">Sign In</v-tab>
           <v-tab value="signup">Sign Up</v-tab>
