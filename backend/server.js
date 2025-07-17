@@ -7,7 +7,9 @@ const allowedOrigins = [
   'https://supplement-checker-ui-app-e82892764eec.herokuapp.com',
   'http://localhost:5173',
   'http://www.ismystacksafe.com',
-  'https://www.ismystacksafe.com'
+  'https://www.ismystacksafe.com',
+  'https://www.suppscanr.com',
+  'http://www.suppscanr.com'
 ];
 
 app.use(cors({
