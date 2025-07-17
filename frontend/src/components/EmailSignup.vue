@@ -32,4 +32,30 @@ async function submit() {
   }
   loading.value = false
 }
-</script> 
+</script>
+<style scoped>
+@media (max-width: 600px) {
+  .v-card {
+    border-radius: 12px !important;
+    padding: 8px 0 !important;
+    margin-bottom: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .v-card-title {
+    font-size: 1.1rem !important;
+    padding: 10px 8px !important;
+  }
+  .v-card-text {
+    padding: 8px 8px !important;
+  }
+  .v-btn {
+    width: 100% !important;
+    font-size: 1rem !important;
+    margin: 8px 0 !important;
+  }
+  .text-success, .text-error {
+    font-size: 0.98rem !important;
+  }
+}
+</style> 

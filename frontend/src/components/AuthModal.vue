@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="internalOpen" max-width="420" persistent>
-    <v-card>
+    <v-card style="background: #fff !important;">
       <v-card-title class="font-weight-bold text-center">Sign In or Create Account</v-card-title>
       <v-card-text>
         <v-btn block color="primary" class="mb-2" @click="oauth('google')">
@@ -17,7 +17,11 @@
               <v-text-field v-model="loginPassword" label="Password" type="password" required class="mb-2" />
               <v-btn type="submit" color="primary" block :loading="loading">Sign In</v-btn>
               <div v-if="loginError" class="mt-2 text-error">{{ loginError }}</div>
+              <div class="mt-2 text-center">
+                <a href="#" class="text-primary text-decoration-underline" @click.prevent="showReset = true">Forgot Password?</a>
+              </div>
             </v-form>
+            <PasswordResetRequest :open="showReset" :onClose="() => showReset = false" />
           </v-window-item>
           <v-window-item value="signup">
             <v-form @submit.prevent="signup">
@@ -39,6 +43,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import axios from 'axios'
+import PasswordResetRequest from './PasswordResetRequest.vue'
 const props = defineProps({ open: Boolean })
 const emit = defineEmits(['close', 'auth-success'])
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
@@ -53,6 +58,7 @@ const signupPassword = ref('')
 const loginError = ref('')
 const signupError = ref('')
 const loading = ref(false)
+const showReset = ref(false)
 function close() { internalOpen.value = false }
 function oauth(provider) {
   window.location.href = `${API_BASE_URL}/auth/${provider}`

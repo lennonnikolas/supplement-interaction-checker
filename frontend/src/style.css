@@ -8,8 +8,8 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: #213547;
+  background-color: #f4f8f6;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -28,10 +28,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background: #f4f8f6 !important;
+  color: #213547 !important;
 }
 
 h1 {
@@ -58,8 +58,34 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-.card {
-  padding: 2em;
+.card, .v-card, .professional-card, .cta-card, .recent-checks-card, .success-card {
+  background: #b4ccbc !important;
+  color: #213547 !important;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px 0 rgba(31, 38, 135, 0.08);
+}
+
+.v-btn, .v-btn--primary, .sticky-upgrade-btn {
+  background-color: #155b5f !important;
+  color: #fff !important;
+  border-radius: 8px;
+}
+.v-btn:hover, .v-btn--primary:hover, .sticky-upgrade-btn:hover {
+  background-color: #5c645c !important;
+}
+
+.v-app-bar {
+  background-color: #155b5f !important;
+  color: #fff !important;
+}
+
+.v-toolbar-title {
+  color: #fff !important;
+}
+
+.v-alert {
+  background: #b4ccbc !important;
+  color: #213547 !important;
 }
 
 #app {
@@ -67,6 +93,15 @@ button:focus-visible {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+.pt-app-bar {
+  padding-top: 64px;
+}
+@media (max-width: 600px) {
+  .pt-app-bar {
+    padding-top: 56px;
+  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -80,4 +115,31 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+a, .v-btn--text, .v-btn--plain {
+  color: #155b5f !important;
+  text-decoration: underline;
+}
+a:hover, .v-btn--text:hover, .v-btn--plain:hover {
+  color: #155b5f !important;
+  text-decoration: underline;
+}
+
+.v-icon, .icon {
+  color: #155b5f !important;
+}
+
+.text-secondary, .text-disabled {
+  color: #5c645c !important;
+}
+
+body, .v-application {
+  color: #213547 !important;
+  background: #f4f8f6 !important;
+}
+
+.high-contrast {
+  color: #213547 !important;
+  background: #fff !important;
 }

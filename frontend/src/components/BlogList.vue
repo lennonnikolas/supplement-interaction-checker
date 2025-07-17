@@ -1,5 +1,5 @@
 <template>
-  <v-card class="mb-3" outlined>
+  <v-card class="mb-3 blog-article-card" outlined>
     <v-card-title>Articles & FAQ</v-card-title>
     <v-card-text>
       <div v-if="loading">Loading...</div>
@@ -31,4 +31,36 @@ onMounted(async () => {
     loading.value = false
   }
 })
-</script> 
+</script>
+<style scoped>
+.v-card, .blog-card, .blog-article-card, ::v-deep(.blog-article-card), ::v-deep(.blog-article-card *) {
+  background: #fff !important;
+  color: #213547 !important;
+}
+.v-card-title, .v-card-text, .v-list-item-title {
+  color: #213547 !important;
+}
+.v-icon, .icon {
+  color: #155b5f !important;
+}
+@media (max-width: 600px) {
+  .v-card {
+    border-radius: 12px !important;
+    padding: 8px 0 !important;
+    margin-bottom: 14px !important;
+  }
+  .v-card-title {
+    font-size: 1.1rem !important;
+    padding: 10px 8px !important;
+  }
+  .v-card-text {
+    padding: 8px 8px !important;
+  }
+  .font-weight-bold {
+    font-size: 1rem !important;
+  }
+  .text-caption {
+    font-size: 0.95rem !important;
+  }
+}
+</style> 
