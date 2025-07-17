@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const passport = require('passport');
+const crypto = require('crypto');
 
 // Replace with your own secret in production!
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key';
@@ -11,18 +12,29 @@ const JWT_EXPIRES_IN = '7d';
 // Assume you have a db pool (pg.Pool) available
 const pool = require('../db/pool');
 
-// Helper: create JWT
+// Helper: create JWT with jti
 function createToken(user) {
-  return jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  const jti = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString('hex');
+  return jwt.sign({ id: user.id, email: user.email, jti }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
-// Middleware: authenticate JWT
-function authenticateJWT(req, res, next) {
+// Helper: check if jti is blacklisted
+async function isJtiBlacklisted(jti) {
+  const result = await pool.query('SELECT 1 FROM jwt_blacklist WHERE jti = $1 AND expires_at > NOW()', [jti]);
+  return result.rows.length > 0;
+}
+
+// Middleware: authenticate JWT and check blacklist
+async function authenticateJWT(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'No token provided' });
   const token = authHeader.split(' ')[1];
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET, async (err, user) => {
     if (err) return res.status(403).json({ error: 'Invalid token' });
+    // Check blacklist
+    if (await isJtiBlacklisted(user.jti)) {
+      return res.status(401).json({ error: 'Token has been revoked' });
+    }
     req.user = user;
     next();
   });
@@ -35,7 +47,6 @@ router.post('/signup', async (req, res) => {
   
   try {
     const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-    console.log('existing:', existing);
     if (existing.rows.length > 0) return res.status(409).json({ error: 'Email already registered' });
     const hash = await bcrypt.hash(password, 12);
     const result = await pool.query(
@@ -46,7 +57,6 @@ router.post('/signup', async (req, res) => {
     const token = createToken(user);
     res.json({ token, user });
   } catch (err) {
-    console.error('Signup failed:', err);
     res.status(500).json({ error: 'Signup failed' });
   }
 });
@@ -57,10 +67,14 @@ router.post('/login', async (req, res) => {
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   try {
     const result = await pool.query('SELECT id, email, password_hash FROM users WHERE email = $1', [email]);
-    if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
     const user = result.rows[0];
     const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!valid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
     const token = createToken(user);
     res.json({ token, user: { id: user.id, email: user.email } });
   } catch (err) {
@@ -79,6 +93,21 @@ router.get('/me', authenticateJWT, async (req, res) => {
   }
 });
 
+// POST /auth/logout - Blacklist current JWT
+router.post('/logout', authenticateJWT, async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.decode(token);
+    const jti = decoded.jti;
+    const exp = decoded.exp ? new Date(decoded.exp * 1000) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // fallback 7d
+    await pool.query('INSERT INTO jwt_blacklist (jti, expires_at) VALUES ($1, $2)', [jti, exp]);
+    res.json({ message: 'Logged out successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Logout failed' });
+  }
+});
+
 // Google OAuth: /auth/google
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
@@ -91,4 +120,7 @@ router.get('/google/callback', passport.authenticate('google', { session: false,
   res.redirect(`${redirectUrl}/oauth-success?token=${token}`);
 });
 
-module.exports = router; 
+module.exports = {
+  router,
+  authenticateJWT
+}; 

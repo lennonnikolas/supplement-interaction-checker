@@ -20,6 +20,11 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+// Register Stripe webhook route BEFORE JSON middleware to preserve raw body
+const stripeRoute = require('./routes/stripe');
+app.use('/api/stripe', stripeRoute);
+
 app.use(express.json())
 
 const passport = require('passport')
@@ -45,8 +50,22 @@ app.use('/api/blog', blogRoute)
 const subscribeRoute = require('./routes/subscribe')
 app.use('/api/subscribe', subscribeRoute)
 
-const authRoutes = require('./routes/auth')
+const { router: authRoutes } = require('./routes/auth')
 app.use('/api/auth', authRoutes)
 
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))
+const stacksRoute = require('./routes/stacks');
+app.use('/api/stacks', stacksRoute);
+
+const reportsRoute = require('./routes/reports');
+app.use('/api/reports', reportsRoute);
+
+const recentRoute = require('./routes/recent');
+app.use('/api/recent', recentRoute);
+
+const passwordResetRoute = require('./routes/passwordReset');
+app.use('/api/password-reset', passwordResetRoute);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
