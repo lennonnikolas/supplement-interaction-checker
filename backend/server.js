@@ -6,6 +6,8 @@ const app = express()
 const allowedOrigins = [
   'https://supplement-checker-ui-app-e82892764eec.herokuapp.com',
   'http://localhost:5173',
+  'http://www.ismystacksafe.com',
+  'https://www.ismystacksafe.com'
 ];
 
 app.use(cors({
@@ -64,6 +66,14 @@ app.use('/api/recent', recentRoute);
 
 const passwordResetRoute = require('./routes/passwordReset');
 app.use('/api/password-reset', passwordResetRoute);
+
+// Check for required environment variables
+const requiredEnvs = ['DATABASE_URL', 'STRIPE_SECRET_KEY', 'RESEND_API_KEY'];
+const missing = requiredEnvs.filter(key => !process.env[key]);
+if (missing.length) {
+  console.error('Missing required environment variables:', missing.join(', '));
+  process.exit(1);
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
