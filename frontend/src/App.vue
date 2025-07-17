@@ -5,8 +5,8 @@
     </v-overlay>
     <div class="modern-bg min-h-screen pt-app-bar">
       <v-app-bar app color="#fff" elevation="2" class="app-bar-white" style="background-color: #fff !important; color: #155b5f !important;">
-        <v-img src="/src/assets/SuppScanrLogo-Transparent.png" alt="SuppScanr Logo" contain max-width="96" max-height="96" class="mr-3" style="border-radius:8px;" />
-        <v-img src="/src/assets/SuppScanrLogo-wordmark-transparent.png" alt="SuppScanr Wordmark" contain max-width="220" max-height="48" class="suppscanr-wordmark" style="margin-left: 0; cursor: pointer;" @click="goHome" />
+        <v-img :src="logo" alt="SuppScanr Logo" contain max-width="96" max-height="96" class="mr-3" style="border-radius:8px;" />
+        <v-img :src="wordmark" alt="SuppScanr Wordmark" contain max-width="220" max-height="48" class="suppscanr-wordmark" style="margin-left: 0; cursor: pointer;" @click="goHome" />
         <v-spacer></v-spacer>
         <div class="d-none d-md-flex align-center">
           <v-btn text class="font-weight-medium mr-2" style="color: #155b5f;" @click="goToBlog">
@@ -89,6 +89,10 @@ import AuthModal from './components/AuthModal.vue'
 import axios from 'axios'
 import { useSessionTimeout } from './composables/useSessionTimeout'
 import { useRouter } from 'vue-router'
+
+// Import images for top banner
+import logo from '@/assets/SuppScanrLogo-Transparent.png'
+import wordmark from '@/assets/SuppScanrLogo-wordmark-transparent.png'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 const supplementInfoList = ref([])
