@@ -7,6 +7,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import router from './router'
 import { createPinia } from 'pinia'
+import VueGtag from 'vue-gtag-next'
 
 const vuetify = createVuetify({
   components,
@@ -41,5 +42,9 @@ const vuetify = createVuetify({
 const app = createApp(App)
 app.use(vuetify)
 app.use(createPinia())
-app.use(router)
+app.use(VueGtag, {
+  property: {
+    id: 'G-K8MKNCQMGV' // TODO: Replace with your GA4 Measurement ID
+  }
+}, router)
 app.mount('#app')
