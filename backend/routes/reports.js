@@ -18,7 +18,7 @@ async function generatePdfFromHtml(html, pdfPath) {
       '--single-process',
       '--no-zygote'
     ],
-    executablePath: process.env.CHROME_BIN || undefined
+    executablePath: '/app/.chrome-for-testing/chrome-linux64/chrome'
   });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'networkidle0' });
