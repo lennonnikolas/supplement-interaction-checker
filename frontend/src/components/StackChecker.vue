@@ -15,13 +15,16 @@
           <div class="font-weight-bold mb-1">Supplements to Analyze:</div>
           <v-chip v-for="(supp, i) in parsedSupplements" :key="i" class="ma-1">{{ supp }}</v-chip>
         </div>
+        <v-alert v-if="parsedSupplementsOverLimit" type="warning" class="mt-2">
+          You can only analyze up to {{ MAX_SUPPLEMENTS }} supplements at a time. Only the first {{ MAX_SUPPLEMENTS }} will be used.
+        </v-alert>
         <v-btn 
           color="primary" 
           class="mt-4 professional-btn" 
           block 
           size="large" 
           prepend-icon="mdi-magnify" 
-          :disabled="parsedSupplements.length < 2" 
+          :disabled="parsedSupplements.length < 2 || parsedSupplementsOverLimit" 
           @click="checkInteractions"
         >
           Analyze Interactions
@@ -194,7 +197,8 @@ const supplementInputs = ref([
 ])
 const results = ref([])
 const supplementDetails = ref([])
-const maxSupplementsReached = computed(() => supplementInputs.value.length >= 15)
+const MAX_SUPPLEMENTS = 3;
+const maxSupplementsReached = computed(() => supplementInputs.value.length >= 3)
 const allInputsFilled = computed(() => supplementInputs.value.every(i => i.value && i.value.trim() !== ''))
 const lastAnalyzedStack = ref([])
 
@@ -203,14 +207,21 @@ const setAnalyzingSupplements = inject('setAnalyzingSupplements', () => {})
 const isPro = inject('isPro', ref(false))
 const entryMode = ref('manual')
 const pastedText = ref('')
-const parsedSupplements = computed(() => pastedText.value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean))
+const parsedSupplements = computed(() => {
+  const arr = pastedText.value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+  return arr.slice(0, MAX_SUPPLEMENTS);
+});
+const parsedSupplementsOverLimit = computed(() => {
+  const arr = pastedText.value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+  return arr.length > MAX_SUPPLEMENTS;
+});
 // Stack rating state moved to Home.vue
 const saveStackLoading = ref(false)
 const saveStackSuccess = ref('')
 const saveStackError = ref('')
 
 function addInput() {
-  if (supplementInputs.value.length >= 15) return
+  if (supplementInputs.value.length >= 3) return
   supplementInputs.value.push({ id: idCounter++, value: '', suggestions: [], search: '', loading: false })
 }
 function removeInput(idx) {
