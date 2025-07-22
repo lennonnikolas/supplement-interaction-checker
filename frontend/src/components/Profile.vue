@@ -145,6 +145,7 @@ import axios from 'axios'
 const rerunStackStore = useRerunStackStore()
 const router = useRouter()
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const BACKEND_BASE_URL = 'https://supplement-checker-backend-app-1911eb207802.herokuapp.com';
 
 // Get user from App.vue
 const user = inject('user', ref(null))
@@ -302,8 +303,11 @@ async function exportReport(stack) {
       stack_id: stack.id,
       result: hist.result
     }, { headers: { Authorization: `Bearer ${jwt}` } })
-    // Instead of opening a dialog, trigger a download
-    const url = resp.data.pdf_url
+    // Use the full backend URL for the PDF download
+    let url = resp.data.pdf_url
+    if (!url.startsWith('http')) {
+      url = BACKEND_BASE_URL + url
+    }
     // Create a hidden <a> and click it
     const link = document.createElement('a')
     link.href = url
