@@ -132,18 +132,6 @@
     </v-card>
     <v-btn class="mt-6" color="secondary" to="/">Back to Home</v-btn>
   </v-container>
-  <v-dialog v-model="reportDialog" max-width="500">
-    <v-card>
-      <v-card-title>Export/Share Report</v-card-title>
-      <v-card-text>
-        <div v-if="reportUrl"><a :href="reportUrl" target="_blank">Download PDF</a></div>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn text @click="reportDialog = false">Close</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
   <v-snackbar v-model="reportSnackbar" color="error" timeout="3000">{{ reportSnackbarMsg }}</v-snackbar>
   <v-snackbar v-model="cancelSnackbar" :color="cancelSnackbarColor" timeout="5000">{{ cancelSnackbarMsg }}</v-snackbar>
 </template>
@@ -181,6 +169,8 @@ const reportSnackbarMsg = ref('')
 const cancelSnackbar = ref(false)
 const cancelSnackbarMsg = ref('')
 const cancelSnackbarColor = ref('success')
+// Add a ref for the hidden download link
+const pdfDownloadLink = ref(null)
 
 // Fetch subscription status and update global state
 async function fetchSubscriptionStatus() {
@@ -312,8 +302,15 @@ async function exportReport(stack) {
       stack_id: stack.id,
       result: hist.result
     }, { headers: { Authorization: `Bearer ${jwt}` } })
-    reportUrl.value = resp.data.pdf_url
-    reportDialog.value = true
+    // Instead of opening a dialog, trigger a download
+    const url = resp.data.pdf_url
+    // Create a hidden <a> and click it
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', '') // Let backend filename take precedence
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   } catch {
     reportSnackbarMsg.value = 'Failed to generate PDF.'
     reportSnackbar.value = true
