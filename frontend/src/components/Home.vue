@@ -54,10 +54,12 @@
           <StackChecker @update:stack="onStackChecked" :rerun-stack="rerunStack" :stack-id="rerunStackId" @loading="loading = $event" @show-pro-modal="$emit('show-pro-modal')" ref="stackCheckerRef" />
           <div v-if="isPro" class="mt-4 d-flex flex-row justify-center align-center">
             <v-btn color="success" class="mr-2"
-              @click="stackCheckerRef.value.saveStack?.()"
+              @click="handleSaveStack"
               :disabled="!lastAnalyzedStack.length || stackCheckerRef.value?.saveStackLoading">
               Save Stack
             </v-btn>
+            <v-alert v-if="saveStackSuccess" type="success" class="mt-2">{{ saveStackSuccess }}</v-alert>
+            <v-alert v-if="saveStackError" type="error" class="mt-2">{{ saveStackError }}</v-alert>
             <v-btn color="info" class="ml-2"
               @click="handleRateStack"
               :loading="stackRatingLoading"
@@ -179,6 +181,21 @@ const stackRatingDrawbacks = ref('')
 const stackRatingLoading = ref(false)
 const stackRatingError = ref('')
 const showStackRater = ref(false)
+
+const saveStackSuccess = ref('')
+const saveStackError = ref('')
+
+async function handleSaveStack() {
+  saveStackSuccess.value = ''
+  saveStackError.value = ''
+  try {
+    await stackCheckerRef.value.saveStack()
+    saveStackSuccess.value = stackCheckerRef.value.saveStackSuccess
+    saveStackError.value = stackCheckerRef.value.saveStackError
+  } catch (e) {
+    saveStackError.value = 'Failed to save stack.'
+  }
+}
 
 async function handleRateStack() {
   stackRatingLoading.value = true

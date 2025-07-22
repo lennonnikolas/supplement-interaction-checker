@@ -157,14 +157,7 @@
           </v-card>
         </div>
         <!-- Stack rating UI moved to Home.vue -->
-        <!-- Save Stack Button for Pro Users: always show after analysis if pro -->
-        <div v-if="isPro && lastAnalyzedStack.length" class="mt-2 text-center">
-          <v-btn color="success" @click="saveStack" :disabled="saveStackLoading" prepend-icon="mdi-content-save">
-            Save Stack
-          </v-btn>
-          <v-alert v-if="saveStackSuccess" type="success" class="mt-2">{{ saveStackSuccess }}</v-alert>
-          <v-alert v-if="saveStackError" type="error" class="mt-2">{{ saveStackError }}</v-alert>
-        </div>
+        <!-- Save Stack button now handled in Home.vue -->
       </div>
       <!-- CTA Section -->
       <div v-if="!isPro" class="cta-section mt-8">
