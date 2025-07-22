@@ -74,6 +74,8 @@ function reportHtmlTemplate(stack, result) {
   `;
 }
 
+const sanitizeFilename = name => name.replace(/[^a-z0-9\-]+/gi, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '').toLowerCase();
+
 // POST /reports - Generate PDF and shareable link for a stack check result
 router.post('/', authenticateJWT, async (req, res) => {
   const { stack_id, result } = req.body;
@@ -83,6 +85,7 @@ router.post('/', authenticateJWT, async (req, res) => {
     const stackRes = await pool.query('SELECT * FROM stacks WHERE id = $1 AND user_id = $2', [stack_id, req.user.id]);
     if (stackRes.rows.length === 0) return res.status(404).json({ error: 'Stack not found' });
     const stack = stackRes.rows[0].stack_data;
+    const stackName = stackRes.rows[0].name || 'stack';
     // Generate PDF
     const pdfId = uuidv4();
     const pdfDir = process.env.PDF_REPORTS_DIR || '/tmp/pdf_reports';
@@ -90,8 +93,11 @@ router.post('/', authenticateJWT, async (req, res) => {
       fs.mkdirSync(pdfDir, { recursive: true });
     }
     const pdfPath = path.join(pdfDir, `${pdfId}.pdf`);
+    const metaPath = path.join(pdfDir, `${pdfId}.json`);
     const html = reportHtmlTemplate(stack, result);
     await generatePdfFromHtml(html, pdfPath);
+    // Save metadata
+    fs.writeFileSync(metaPath, JSON.stringify({ stackName, createdAt: new Date().toISOString() }));
     const pdfUrl = `/api/reports/pdf/${pdfId}`;
     res.json({ pdf_url: pdfUrl });
   } catch (err) {
@@ -105,8 +111,19 @@ router.get('/pdf/:id', (req, res) => {
   const pdfId = req.params.id;
   const pdfDir = process.env.PDF_REPORTS_DIR || '/tmp/pdf_reports';
   const pdfPath = path.join(pdfDir, `${pdfId}.pdf`);
+  const metaPath = path.join(pdfDir, `${pdfId}.json`);
   if (!fs.existsSync(pdfPath)) return res.status(404).send('PDF not found');
+  let filename = 'report.pdf';
+  if (fs.existsSync(metaPath)) {
+    try {
+      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+      const stackName = meta.stackName ? sanitizeFilename(meta.stackName) : 'stack';
+      const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      filename = `${stackName}-${dateStr}.pdf`;
+    } catch {}
+  }
   res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   fs.createReadStream(pdfPath).pipe(res);
 });
 
