@@ -9,7 +9,6 @@ process.on('unhandledRejection', err => {
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
-require('dotenv').config({ path: '.env.local', override: true });
 
 const app = express()
 const allowedOrigins = [
