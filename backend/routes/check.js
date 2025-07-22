@@ -3,6 +3,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const router = express.Router();
 const pool = require('../db');
+const { authenticateJWT } = require('./auth');
 
 // Map common supplement names to correct slugs for NIH ODS and WebMD
 const slugMap = {
@@ -582,8 +583,8 @@ Focus on practical, observable symptoms that users would actually experience. En
 }
 
 // POST /check - improved logic
-router.post('/check', async (req, res) => {
-  const { stack } = req.body;
+router.post('/check', authenticateJWT, async (req, res) => {
+  const { stack, stack_id } = req.body;
   if (!Array.isArray(stack) || stack.length < 2) {
     return res.status(400).json({ error: 'At least 2 supplements required.' });
   }
@@ -642,6 +643,18 @@ router.post('/check', async (req, res) => {
       });
     }
     
+    // Save to stack_history if stack_id and user are present
+    if (stack_id && req.user && req.user.id) {
+      try {
+        await pool.query(
+          'INSERT INTO stack_history (user_id, stack_id, result) VALUES ($1, $2, $3)',
+          [req.user.id, stack_id, JSON.stringify({ interactions, supplements })]
+        );
+      } catch (e) {
+        console.error('Failed to save stack history:', e);
+        // Don't block the response, just log the error
+      }
+    }
     res.json({ interactions, supplements });
   } catch (error) {
     console.error('Error in improved /check:', error);

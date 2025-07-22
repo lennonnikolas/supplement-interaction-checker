@@ -1,6 +1,15 @@
+console.log('Starting server.js');
+process.on('uncaughtException', err => {
+  console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', err => {
+  console.error('Unhandled Rejection:', err);
+});
+
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
+require('dotenv').config({ path: '.env.local', override: true });
 
 const app = express()
 const allowedOrigins = [
@@ -81,3 +90,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+console.log('End of server.js');
