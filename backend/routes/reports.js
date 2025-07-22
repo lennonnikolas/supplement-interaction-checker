@@ -75,10 +75,12 @@ router.post('/', authenticateJWT, async (req, res) => {
     const stack = stackRes.rows[0].stack_data;
     // Generate PDF
     const pdfId = uuidv4();
-    const pdfPath = path.join(__dirname, `../../pdf_reports/${pdfId}.pdf`);
+    const pdfDir = process.env.PDF_REPORTS_DIR || '/tmp/pdf_reports';
+    if (!fs.existsSync(pdfDir)) {
+      fs.mkdirSync(pdfDir, { recursive: true });
+    }
+    const pdfPath = path.join(pdfDir, `${pdfId}.pdf`);
     const html = reportHtmlTemplate(stack, result);
-    // Ensure directory exists
-    fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
     await generatePdfFromHtml(html, pdfPath);
     const pdfUrl = `/api/reports/pdf/${pdfId}`;
     res.json({ pdf_url: pdfUrl });
@@ -91,7 +93,8 @@ router.post('/', authenticateJWT, async (req, res) => {
 // GET /reports/pdf/:id - Serve the PDF file
 router.get('/pdf/:id', (req, res) => {
   const pdfId = req.params.id;
-  const pdfPath = path.join(__dirname, `../../pdf_reports/${pdfId}.pdf`);
+  const pdfDir = process.env.PDF_REPORTS_DIR || '/tmp/pdf_reports';
+  const pdfPath = path.join(pdfDir, `${pdfId}.pdf`);
   if (!fs.existsSync(pdfPath)) return res.status(404).send('PDF not found');
   res.setHeader('Content-Type', 'application/pdf');
   fs.createReadStream(pdfPath).pipe(res);
