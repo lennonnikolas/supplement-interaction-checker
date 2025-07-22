@@ -16,7 +16,7 @@
           <v-chip v-for="(supp, i) in parsedSupplements" :key="i" class="ma-1">{{ supp }}</v-chip>
         </div>
         <v-alert v-if="parsedSupplementsOverLimit" type="warning" class="mt-2">
-          You can only analyze up to {{ MAX_SUPPLEMENTS }} supplements at a time. Only the first {{ MAX_SUPPLEMENTS }} will be used.
+          You can only analyze up to 3 supplements at a time as a free user. Only the first 3 will be used.
         </v-alert>
         <v-btn 
           color="primary" 
@@ -197,8 +197,8 @@ const supplementInputs = ref([
 ])
 const results = ref([])
 const supplementDetails = ref([])
-const MAX_SUPPLEMENTS = 3;
-const maxSupplementsReached = computed(() => supplementInputs.value.length >= 3)
+const MAX_SUPPLEMENTS = computed(() => isPro.value ? Infinity : 3);
+const maxSupplementsReached = computed(() => supplementInputs.value.length >= MAX_SUPPLEMENTS.value)
 const allInputsFilled = computed(() => supplementInputs.value.every(i => i.value && i.value.trim() !== ''))
 const lastAnalyzedStack = ref([])
 
@@ -209,11 +209,11 @@ const entryMode = ref('manual')
 const pastedText = ref('')
 const parsedSupplements = computed(() => {
   const arr = pastedText.value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-  return arr.slice(0, MAX_SUPPLEMENTS);
+  return isPro.value ? arr : arr.slice(0, 3);
 });
 const parsedSupplementsOverLimit = computed(() => {
   const arr = pastedText.value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-  return arr.length > MAX_SUPPLEMENTS;
+  return !isPro.value && arr.length > 3;
 });
 // Stack rating state moved to Home.vue
 const saveStackLoading = ref(false)
@@ -221,7 +221,7 @@ const saveStackSuccess = ref('')
 const saveStackError = ref('')
 
 function addInput() {
-  if (supplementInputs.value.length >= 3) return
+  if (!isPro.value && supplementInputs.value.length >= 3) return
   supplementInputs.value.push({ id: idCounter++, value: '', suggestions: [], search: '', loading: false })
 }
 function removeInput(idx) {
