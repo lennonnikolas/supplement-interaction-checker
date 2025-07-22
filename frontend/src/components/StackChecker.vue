@@ -156,17 +156,14 @@
             </v-card-text>
           </v-card>
         </div>
-        <div v-if="isPro" class="stack-rating-bar mt-4">
-          <v-alert type="info" border="left" color="primary" icon="mdi-star" class="mb-2">
-            <span class="font-weight-bold">Stack Rating:</span>
-            <span v-if="stackRatingLoading">Loading...</span>
-            <span v-else-if="stackRating !== null"> {{ stackRating }} / 10</span>
-            <span v-else> (not rated yet)</span>
-            <div v-if="stackRatingBenefits" class="mt-2 text-caption"><span class="font-weight-bold">Benefits:</span> {{ stackRatingBenefits }}</div>
-            <div v-if="stackRatingDrawbacks" class="mt-2 text-caption"><span class="font-weight-bold">Drawbacks:</span> {{ stackRatingDrawbacks }}</div>
-            <div v-if="stackRatingError" class="text-error mt-1">{{ stackRatingError }}</div>
-            <v-btn color="primary" class="ml-2" @click="getStackRating" :loading="stackRatingLoading">Rate My Stack</v-btn>
-          </v-alert>
+        <!-- Stack rating UI moved to Home.vue -->
+        <!-- Save Stack Button for Pro Users: always show after analysis if pro -->
+        <div v-if="isPro && lastAnalyzedStack.length" class="mt-2 text-center">
+          <v-btn color="success" @click="saveStack" :disabled="saveStackLoading" prepend-icon="mdi-content-save">
+            Save Stack
+          </v-btn>
+          <v-alert v-if="saveStackSuccess" type="success" class="mt-2">{{ saveStackSuccess }}</v-alert>
+          <v-alert v-if="saveStackError" type="error" class="mt-2">{{ saveStackError }}</v-alert>
         </div>
       </div>
       <!-- CTA Section -->
@@ -209,15 +206,15 @@ const allInputsFilled = computed(() => supplementInputs.value.every(i => i.value
 const lastAnalyzedStack = ref([])
 
 const setGlobalLoading = inject('setGlobalLoading', () => {})
+const setAnalyzingSupplements = inject('setAnalyzingSupplements', () => {})
 const isPro = inject('isPro', ref(false))
 const entryMode = ref('manual')
 const pastedText = ref('')
 const parsedSupplements = computed(() => pastedText.value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean))
-const stackRating = ref(null)
-const stackRatingBenefits = ref('')
-const stackRatingDrawbacks = ref('')
-const stackRatingLoading = ref(false)
-const stackRatingError = ref('')
+// Stack rating state moved to Home.vue
+const saveStackLoading = ref(false)
+const saveStackSuccess = ref('')
+const saveStackError = ref('')
 
 function addInput() {
   if (supplementInputs.value.length >= 15) return
@@ -250,6 +247,7 @@ async function onSearch(idx, val) {
 
 async function checkInteractions() {
   setGlobalLoading(true)
+  setAnalyzingSupplements(true)
   let stack = []
   if (entryMode.value === 'manual') {
     stack = supplementInputs.value.map(i => i.value).filter(Boolean)
@@ -268,34 +266,31 @@ async function checkInteractions() {
     emit('update:stack', stack, results.value, supplementDetails.value)
   } finally {
     setGlobalLoading(false)
+    setAnalyzingSupplements(false)
   }
 }
 
-async function getStackRating() {
-  stackRatingLoading.value = true
-  stackRatingError.value = ''
-  stackRating.value = null
-  stackRatingBenefits.value = ''
-  stackRatingDrawbacks.value = ''
-  const stack = lastAnalyzedStack.value
-  if (!stack || stack.length < 2) {
-    stackRatingError.value = 'Please analyze at least 2 supplements first.'
-    stackRatingLoading.value = false
-    return
-  }
+// Stack rating logic moved to Home.vue
+
+async function saveStack() {
+  if (!lastAnalyzedStack.value.length) return
+  const name = window.prompt('Enter a name for your stack:')
+  if (!name || !name.trim()) return
+  saveStackLoading.value = true
+  saveStackSuccess.value = ''
+  saveStackError.value = ''
   try {
-    const { data } = await axios.post('/api/supplement-info/stack-rating', { stack })
-    let parsed = data
-    if (typeof data === 'string') {
-      try { parsed = JSON.parse(data) } catch {}
-    }
-    stackRating.value = parsed.rating
-    stackRatingBenefits.value = parsed.benefits
-    stackRatingDrawbacks.value = parsed.drawbacks
+    const jwt = localStorage.getItem('jwt')
+    const config = jwt ? { headers: { Authorization: `Bearer ${jwt}` } } : {}
+    const res = await axios.post(`${API_BASE_URL}/stacks`, {
+      name: name.trim(),
+      stack_data: lastAnalyzedStack.value
+    }, config)
+    saveStackSuccess.value = 'Stack saved!'
   } catch (err) {
-    stackRatingError.value = err.response?.data?.error || 'Rating failed'
+    saveStackError.value = err.response?.data?.error || 'Failed to save stack.'
   } finally {
-    stackRatingLoading.value = false
+    saveStackLoading.value = false
   }
 }
 
@@ -340,6 +335,12 @@ watch(() => props.rerunStack, async (newStack) => {
 
 watch(setGlobalLoading, (val) => {
   emit('loading', val)
+})
+
+defineExpose({
+  getLastAnalyzedStack: () => lastAnalyzedStack.value,
+  saveStack,
+  saveStackLoading
 })
 </script>
 <style scoped>

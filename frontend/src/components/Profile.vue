@@ -89,7 +89,15 @@
               <div><strong>Supplements:</strong> {{ stack.stack_data && stack.stack_data.length ? stack.stack_data.join(', ') : JSON.stringify(stack.stack_data) }}</div>
               <v-btn color="primary" class="mt-2 mr-2" @click="rerunStack(stack)">Re-run</v-btn>
               <v-btn color="error" class="mt-2 mr-2" @click="deleteStack(stack.id)">Delete</v-btn>
-              <v-btn color="secondary" class="mt-2 mr-2" @click="exportReport(stack)">Export as PDF</v-btn>
+              <v-btn 
+                color="secondary" 
+                class="mt-2 mr-2" 
+                @click="exportReport(stack)"
+                :disabled="!history.some(h => h.stack_id === stack.id && h.result)"
+                :title="!history.some(h => h.stack_id === stack.id && h.result) ? 'Analyze this stack before exporting.' : ''"
+              >
+                Export as PDF
+              </v-btn>
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -141,10 +149,12 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, inject } from 'vue'
+import { computed, ref, onMounted, onActivated, inject } from 'vue'
+import { useRerunStackStore } from '../stores/rerunStack'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
+const rerunStackStore = useRerunStackStore()
 const router = useRouter()
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
@@ -279,8 +289,13 @@ async function deleteStack(id) {
   }
 }
 
-function rerunStack(stack) {
-  router.push({ path: '/', query: { stack: encodeURIComponent(JSON.stringify(stack.stack_data)), stackId: stack.id } })
+async function rerunStack(stack) {
+  rerunStackStore.setRerunStack(stack.stack_data, stack.id)
+  await router.push('/')
+  // Wait a moment for the analysis to complete, then refresh history
+  setTimeout(() => {
+    fetchHistory()
+  }, 1500)
 }
 
 async function exportReport(stack) {
@@ -311,6 +326,12 @@ onMounted(() => {
   if (user.value) {
     fetchSubscriptionStatus()
     fetchStacks()
+    fetchHistory()
+  }
+})
+
+onActivated(() => {
+  if (user.value) {
     fetchHistory()
   }
 })

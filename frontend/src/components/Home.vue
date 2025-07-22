@@ -14,11 +14,9 @@
             Get evidence-based insights on supplement interactions, powered by medical research and AI. Stop guessing, start knowing.
           </p>
           <v-btn v-if="!isPro" color="primary" size="x-large" class="hero-cta-btn" @click="$emit('show-pro-modal')" prepend-icon="mdi-crown">
-            Start Free Trial
+            Upgrade to Pro
           </v-btn>
           <div class="hero-trust">
-            <span>No credit card required</span>
-            <span>•</span>
             <span>Cancel anytime</span>
           </div>
         </div>
@@ -53,7 +51,31 @@
       <!-- Main Tool Section -->
       <section id="tool-section" class="tool-section">
         <div class="tool-card">
-          <StackChecker @update:stack="onStackChecked" :rerun-stack="rerunStack" :stack-id="rerunStackId" @loading="loading = $event" @show-pro-modal="$emit('show-pro-modal')" />
+          <StackChecker @update:stack="onStackChecked" :rerun-stack="rerunStack" :stack-id="rerunStackId" @loading="loading = $event" @show-pro-modal="$emit('show-pro-modal')" ref="stackCheckerRef" />
+          <div v-if="isPro" class="mt-4 d-flex flex-row justify-center align-center">
+            <v-btn color="success" class="mr-2"
+              @click="stackCheckerRef.value.saveStack?.()"
+              :disabled="!lastAnalyzedStack.length || stackCheckerRef.value?.saveStackLoading">
+              Save Stack
+            </v-btn>
+            <v-btn color="info" class="ml-2"
+              @click="handleRateStack"
+              :loading="stackRatingLoading"
+              :disabled="!lastAnalyzedStack.length">
+              Rate My Stack
+            </v-btn>
+          </div>
+          <div v-if="showStackRater" class="stack-rating-bar mt-4">
+            <v-alert type="info" border="left" color="primary" icon="mdi-star" class="mb-2">
+              <span class="font-weight-bold">Stack Rating:</span>
+              <span v-if="stackRatingLoading">Loading...</span>
+              <span v-else-if="stackRating !== null"> {{ stackRating }} / 10</span>
+              <span v-else> (not rated yet)</span>
+              <div v-if="stackRatingBenefits" class="mt-2 text-caption"><span class="font-weight-bold">Benefits:</span> {{ stackRatingBenefits }}</div>
+              <div v-if="stackRatingDrawbacks" class="mt-2 text-caption"><span class="font-weight-bold">Drawbacks:</span> {{ stackRatingDrawbacks }}</div>
+              <div v-if="stackRatingError" class="text-error mt-1">{{ stackRatingError }}</div>
+            </v-alert>
+          </div>
         </div>
         <div v-if="supplementInfoList.length || alternativesList.length" class="results-card">
           <div v-if="supplementInfoList.length" class="results-group">
@@ -87,12 +109,12 @@
           </div>
           <div class="pro-funnel-pricing">
             <span class="pro-price">$9.99</span><span class="pro-period">/month</span>
-            <span class="pro-badge">7-day free trial</span>
+            <!-- <span class="pro-badge">7-day free trial</span> -->
           </div>
           <v-btn v-if="!isPro" color="primary" size="x-large" class="pro-funnel-cta" @click="$emit('show-pro-modal')" prepend-icon="mdi-crown">
-            Start Free Trial
+            Upgrade to Pro
           </v-btn>
-          <div class="pro-funnel-trust">No credit card required • Cancel anytime</div>
+          <div class="pro-funnel-trust">Cancel anytime</div>
         </div>
       </section>
 
@@ -128,6 +150,8 @@ import StackChecker from './StackChecker.vue'
 import SupplementInfoCard from './SupplementInfoCard.vue'
 import AlternativeCard from './AlternativeCard.vue'
 import ProModal from './ProModal.vue'
+import { useRerunStackStore } from '../stores/rerunStack'
+import axios from 'axios'
 
 // Get user and isPro state from App.vue
 const user = inject('user', ref(null))
@@ -142,14 +166,70 @@ const showProModal = ref(false)
 
 const isMobile = computed(() => window.innerWidth <= 600)
 
+const rerunStackStore = useRerunStackStore()
+
+const lastAnalyzedStack = ref([])
+
+const stackCheckerRef = ref(null)
+
+// Stack rater state
+const stackRating = ref(null)
+const stackRatingBenefits = ref('')
+const stackRatingDrawbacks = ref('')
+const stackRatingLoading = ref(false)
+const stackRatingError = ref('')
+const showStackRater = ref(false)
+
+async function handleRateStack() {
+  stackRatingLoading.value = true
+  stackRatingError.value = ''
+  stackRating.value = null
+  stackRatingBenefits.value = ''
+  stackRatingDrawbacks.value = ''
+  showStackRater.value = false
+  const stack = stackCheckerRef.value?.getLastAnalyzedStack()
+  if (!stack || stack.length < 2) {
+    stackRatingError.value = 'Please analyze at least 2 supplements first.'
+    stackRatingLoading.value = false
+    showStackRater.value = true
+    return
+  }
+  try {
+    const { data } = await axios.post('/api/supplement-info/stack-rating', { stack })
+    let parsed = data
+    if (typeof data === 'string') {
+      try { parsed = JSON.parse(data) } catch {}
+    }
+    stackRating.value = parsed.rating
+    stackRatingBenefits.value = parsed.benefits
+    stackRatingDrawbacks.value = parsed.drawbacks
+    showStackRater.value = true
+  } catch (err) {
+    stackRatingError.value = err.response?.data?.error || 'Rating failed'
+    showStackRater.value = true
+  } finally {
+    stackRatingLoading.value = false
+  }
+}
+
 function onStackChecked(stack, risks, supplementDetails) {
   supplementInfoList.value = supplementDetails || []
+  lastAnalyzedStack.value = stack || []
   // You can add logic for alternatives here if needed
 }
 
 function scrollToTool() {
   document.getElementById('tool-section').scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
+
+onMounted(() => {
+  if (rerunStackStore.stack && rerunStackStore.stack.length > 0) {
+    rerunStack.value = [...rerunStackStore.stack]
+    rerunStackId.value = rerunStackStore.stackId
+    rerunStackStore.clear()
+    scrollToTool()
+  }
+})
 </script>
 
 <style scoped>

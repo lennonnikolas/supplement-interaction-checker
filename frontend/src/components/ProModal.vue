@@ -17,7 +17,6 @@
             <span class="price-amount">$9.99</span>
             <span class="price-period">/month</span>
           </div>
-          <p class="text-caption text-gray-500 mb-4">Start with a 7-day free trial</p>
         </div>
 
         <!-- Features -->
@@ -78,11 +77,11 @@
             :loading="loading"
             :disabled="loading"
           >
-            Start Free Trial
+            Upgrade to Pro
           </v-btn>
-          <p class="text-caption text-gray-500 mb-4">
-            No credit card required • Cancel anytime • 7-day free trial
-          </p>
+          <div class="pro-modal-footer mt-6 text-caption text-grey">
+            Cancel anytime
+          </div>
           <v-btn 
             text 
             block 

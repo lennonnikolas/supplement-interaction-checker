@@ -24,6 +24,7 @@
         <span class="text-grey">No additional information available</span>
       </div>
     </div>
+    <!--
     <div v-if="isPro" class="related-products-section mt-4">
       <v-divider class="mb-2" />
       <div class="font-weight-bold mb-1">Related Products (Pro)</div>
@@ -34,6 +35,7 @@
       </div>
       <div v-else class="text-caption">No related products found.</div>
     </div>
+    -->
   </div>
 </template>
 <script setup>

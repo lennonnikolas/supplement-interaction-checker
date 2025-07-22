@@ -1,21 +1,25 @@
 <template>
   <v-app>
     <v-overlay persistent :model-value="loading" class="d-flex align-center justify-center" z-index="10000">
-      <v-progress-circular indeterminate size="64" color="primary" />
+      <div class="d-flex flex-column align-center justify-center">
+        <v-progress-circular indeterminate size="64" color="primary" />
+        <div v-if="analyzingSupplements" class="mt-4 text-h6 text-center" style="color: #000;">Analyzing Supplements...</div>
+      </div>
     </v-overlay>
     <div class="modern-bg min-h-screen pt-app-bar">
       <v-app-bar app color="#fff" elevation="2" class="app-bar-white" style="background-color: #fff !important; color: #155b5f !important;">
         <v-img :src="logo" alt="SuppScanr Logo" contain max-width="96" max-height="96" class="mr-3" style="border-radius:8px;" />
         <v-img :src="wordmark" alt="SuppScanr Wordmark" contain max-width="220" max-height="48" class="suppscanr-wordmark" style="margin-left: 0; cursor: pointer;" @click="goHome" />
         <v-spacer></v-spacer>
-        <div class="d-none d-md-flex align-center">
+        <!-- <div class="d-none d-md-flex align-center">
           <v-btn text class="font-weight-medium mr-2" style="color: #155b5f;" @click="goToBlog">
             Blog
           </v-btn>
           <v-btn text class="font-weight-medium mr-4" style="color: #155b5f;" @click="goToFAQ">
             FAQs
           </v-btn>
-        </div>
+        </div> -->
+        <!--
         <v-menu v-model="mobileMenu" :close-on-content-click="false" v-if="isMobile" class="d-md-none">
           <template v-slot:activator="{ props }">
             <v-btn icon v-bind="props" style="background: transparent !important; box-shadow: none !important;">
@@ -37,6 +41,7 @@
             </v-list-item>
           </v-list>
         </v-menu>
+        -->
         <v-btn color="secondary" class="font-weight-bold" style="color: #fff; background: #155b5f;" @click="openAuth" v-if="!user">
           Sign In
         </v-btn>
@@ -73,6 +78,9 @@
         {{ logoutError }}
       </v-alert>
     </div>
+    <div class="disclaimer-bar" style="width:100vw;position:fixed;bottom:0;left:0;z-index:1000;background:#fffbe6;color:#7c4700;padding:12px 0;text-align:center;font-size:1rem;box-shadow:0 -2px 8px rgba(0,0,0,0.04);font-weight:500;">
+      Disclaimer: This website does not provide medical advice. Always consult your doctor or a qualified medical professional before making health decisions.
+    </div>
   </v-app>
 </template>
 
@@ -101,6 +109,7 @@ const recentChecks = ref([])
 const showProModal = ref(false)
 const rerunStack = ref(null)
 const loading = ref(false)
+const analyzingSupplements = ref(false)
 const showAuthModal = ref(false)
 const user = ref(null)
 const mobileMenu = ref(false)
@@ -121,6 +130,9 @@ provide('isPro', isPro)
 // Provide global loading setter
 const setGlobalLoading = (val) => { loading.value = val }
 provide('setGlobalLoading', setGlobalLoading)
+
+const setAnalyzingSupplements = (val) => { analyzingSupplements.value = val }
+provide('setAnalyzingSupplements', setAnalyzingSupplements)
 
 // Provide function to refresh subscription status
 const refreshSubscriptionStatus = async () => {
@@ -181,7 +193,7 @@ function onStackChecked(stack, risks) {
 }
 
 function onRerunStack(stack) {
-  rerunStack.value = stack
+  rerunStack.value = [...stack]; // ensure new array reference for watcher
 }
 
 function openAuth() { showAuthModal.value = true }
@@ -215,6 +227,7 @@ function goToFAQ() {
 
 async function handleLogout() {
   logoutError.value = ''
+  loading.value = true
   try {
     const token = localStorage.getItem('jwt')
     if (token) {
@@ -224,9 +237,15 @@ async function handleLogout() {
     }
   } catch (e) {
     logoutError.value = 'Logout failed. Please try again.'
+    loading.value = false
+    return
   }
   logout()
   userMenu.value = false
+  setTimeout(() => {
+    window.location.reload()
+  }, 800)
+  // Spinner will show until reload
 }
 
 // Handle /oauth-success?token=... redirect
