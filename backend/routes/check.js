@@ -583,7 +583,7 @@ Focus on practical, observable symptoms that users would actually experience. En
 }
 
 // POST /check - improved logic
-router.post('/check', authenticateJWT, async (req, res) => {
+router.post('/check', async (req, res) => {
   const { stack, stack_id } = req.body;
   if (!Array.isArray(stack) || stack.length < 2) {
     return res.status(400).json({ error: 'At least 2 supplements required.' });
