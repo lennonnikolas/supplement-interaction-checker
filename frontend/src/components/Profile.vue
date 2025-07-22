@@ -121,11 +121,21 @@
       <v-card-text>
         <ul class="pro-features-list mb-4">
           <li class="pro-feature-item">Advanced Interaction Analysis</li>
-          <li class="pro-feature-item">Stack Optimizer</li>
           <li class="pro-feature-item">Stack History & Library</li>
           <li class="pro-feature-item">Personal Health Profile Customization</li>
-          <li class="pro-feature-item">AI Chat / Assistant</li>
           <li class="pro-feature-item">PDF / Shareable Reports</li>
+          <li class="pro-feature-item">Unlimited Searches</li>
+          <li class="pro-feature-item">Unlimited Supplement Comparisons</li>
+        </ul>
+      </v-card-text>
+    </v-card>
+    <v-card v-if="user && subscriptionStatus.is_pro" outlined>
+      <v-card-title class="font-weight-bold">Coming Soon!</v-card-title>
+      <v-card-text>
+        <ul class="pro-features-list mb-4">
+          <li class="pro-feature-item">Stack Optimizer</li>
+          <li class="pro-feature-item">Personal Health Profile Customization</li>
+          <li class="pro-feature-item">AI Chat / Assistant</li>
           <li class="pro-feature-item">Priority Feature Voting / Feedback</li>
         </ul>
       </v-card-text>
@@ -137,7 +147,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onActivated, inject } from 'vue'
+import { computed, ref, onMounted, onActivated, inject, watch } from 'vue'
 import { useRerunStackStore } from '../stores/rerunStack'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
@@ -325,6 +335,15 @@ async function exportReport(stack) {
 
 onMounted(() => {
   if (user.value) {
+    fetchSubscriptionStatus()
+    fetchStacks()
+    fetchHistory()
+  }
+})
+
+// Watch for user login after mount (e.g., after refresh)
+watch(user, (newUser) => {
+  if (newUser) {
     fetchSubscriptionStatus()
     fetchStacks()
     fetchHistory()
