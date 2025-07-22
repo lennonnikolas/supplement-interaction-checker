@@ -9,7 +9,17 @@ const router = express.Router();
 
 // Helper: Generate PDF from HTML using Puppeteer
 async function generatePdfFromHtml(html, pdfPath) {
-  const browser = await puppeteer.launch({ headless: 'new' });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--single-process',
+      '--no-zygote'
+    ],
+    executablePath: process.env.CHROME_BIN || undefined
+  });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'networkidle0' });
   await page.pdf({ path: pdfPath, format: 'A4', printBackground: true });
